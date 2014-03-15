@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>World population estimates</title>
+
+    <script src="jquery-2.1.0.js"></script>
+    <script src="jquery.xdomainajax.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="FileSaver.js"></script>
+</head>
+<body>
+
+<script>
+    var convertToInt;
+
+    $.ajax({
+        url: "http://en.wikipedia.org/wiki/World_population_estimates",
+        type: 'GET',
+        cache: false,
+        success: function(data) {
+            var root,allData, body, table;
+            root = $("<div></div>")
+            root.html(data.responseText)
+
+            var contentTH = root.find(".wikitable th"); 
+            var contentTHNew=[];
+                for(var i=0;i<6;i++){
+                  contentTHNew.push(contentTH[i]);
+                }
+
+            var contentTD = root.find(".wikitable tbody tr td"); 
+            console.log(contentTD.length);
+            var contentTDNew=[];
+                for(var i=10*12;i<contentTD.length;i++){
+                  var sel = [0,1,2,3,4,5];
+                  for(var j = 0; j<sel.length;j++){
+                    if(i%12==sel[j])
+                    contentTDNew.push(contentTD[i]);
+                 }
+                }
+
+            var thFin = [];
+            $.each(contentTHNew, function(index, value) {
+              var temp = $.trim($(value).text()).split("\n")[0];
+              thFin.push(temp);
+            });
+
+            var dataFin = [];
+            $.each(contentTDNew, function(index, value) {
+              var temp = convertToInt($(value).text());
+               if(isNaN(temp)) temp = "";
+              dataFin.push(temp);
+            });
+
+            dataFin.splice.apply(dataFin, [0, 0].concat(thFin));
+            console.log(dataFin);
+
+   
+         // saveToFile(dataFin,"World population estimates.csv")
+        },
+        error: function() {
+            return console.log("error");
+        }
+    });
+
+    convertToInt = function(s) {
+        return parseInt(s.replace(/,/g, ""), 10);
+    };
+
+    var saveToFile = function(arrayOfLines, fileName) {
+       var blob, blobText;
+       blobText = arrayOfLines.map(function(d,i) {
+         if ((i+1)%6 !=0){
+           return d + ",";
+         } else {
+           return d + "\n";
+         }
+       });
+       blob = new Blob(blobText, {
+         type: "text/plain;charset=utf-8"
+       });
+       return saveAs(blob, fileName);
+     };
+     
+</script>
+
+
+</body>
+</html>
